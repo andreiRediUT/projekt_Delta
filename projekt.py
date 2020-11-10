@@ -1,7 +1,18 @@
 import pickle
-import os.path
+
+from os import path, environ
 from datetime import date, time, datetime 
 
+URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfw5ZCwsTYPg2pXUhkgXRDghVHLrVzbC1GRX4e7DDgs2q6NxQ/formResponse'
+forms_seaded= {   
+    'matrikel':'1002323025',
+    'nimi':'5777754409',
+    'ruum':'1770608055',
+    'aasta':'1182929069_year',
+    'kuu':'1182929069_month',
+    'päev':'1182929069_paev',
+    'kellaaeg':'2037560166'
+}
 
 def kuupäev():   
     aeg = datetime.now().date()
@@ -37,12 +48,19 @@ def esimene_käivitus():
     ### salvestab andmed objekti ja siis faili
 
     andmed = {
-        'martikel': martikel,
+        'matrikel': martikel,
         'nimi': nimi
     }       
 
     with open('save.p', 'wb') as faili:
         pickle.dump(andmed, faili)
+
+def andmete_saatmine(andmed, seaded):
+    saatmiseks = {}
+    for key, value in seaded.items():
+        saatmiseks[value] = andmed[key]
+    return saatmiseks  
+
 
 
 ##################################################
@@ -53,7 +71,7 @@ print('\nTegemist on skriptiga, mis sisestab andmeid registreerimislehele')
 print('Kuupäeva ja kellaaja tuletab programm ajast, mil programm käivitati.\n')
 
 
-if not (os.path.exists('save.p')):     # Kui käivitakse esimest korda, küsitakse nime ja martikli numbrit
+if not (path.exists('save.p')):     # Kui käivitakse esimest korda, küsitakse nime ja martikli numbrit
     esimene_käivitus()
 
 andmed_failist = {}
@@ -61,7 +79,7 @@ andmed_failist = {}
 with open('save.p', 'rb') as failist:
     andmed_failist = pickle.load(failist)
 
-print(f'\nNimi: {andmed_failist["nimi"]}  Martikli nr/isikukood: {andmed_failist["martikel"]}\n')
+print(f'\nNimi: {andmed_failist["nimi"]}  Martikli nr/isikukood: {andmed_failist["matrikel"]}\n')
 
 
 ruum = input('Sisesta ruumi number:  ')    
@@ -69,17 +87,17 @@ ruum = input('Sisesta ruumi number:  ')
 kuupäev = kuupäev()
 kellaaeg = kellaaeg()
 
-andmed_failist['päev'] = kuupäev[0]
-andmed_failist['kuu'] = kuupäev[1]
+andmed_failist['ruum']= ruum
 andmed_failist['aasta'] = kuupäev[2]
+andmed_failist['kuu'] = kuupäev[1]
+andmed_failist['päev'] = kuupäev[0]
 andmed_failist['kellaaeg'] = kellaaeg
 
 with open('save.p', 'wb') as faili:    #salvestan kogu info save.p faili
     pickle.dump(andmed_failist, faili)
 
-
 #################################### PRINT TESTID
 
-
 andmed = pickle.load(open('save.p', 'rb'))
-print('@@', andmed)
+
+print('@@', andmete_saatmine(andmed, forms_seaded))
