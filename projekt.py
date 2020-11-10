@@ -1,7 +1,18 @@
 import pickle
-import os.path
+
+from os import path, environ
 from datetime import date, time, datetime 
 
+URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfw5ZCwsTYPg2pXUhkgXRDghVHLrVzbC1GRX4e7DDgs2q6NxQ/formResponse'
+forms_seaded= {   
+    'matrikel':'1002323025',
+    'nimi':'5777754409',
+    'ruum':'1770608055',
+    'aasta':'1182929069_year',
+    'kuu':'1182929069_month',
+    'päev':'1182929069_paev',
+    'kellaaeg':'2037560166'
+}
 
 def kuupäev():   
     aeg = datetime.now().date()
@@ -28,68 +39,65 @@ def kellaaeg_sõne(aeg1, aeg2):
 
     return f'{aeg1}-{aeg2}'
     
-def andmete_salvestus():       
+def esimene_käivitus():       
     ### esmakordsel käivitamisel küsitakse nimi ja martikli/number või isikukood
 
     nimi = input('Sisesta ees-ja perekonnanimi: ')
-    martikel = input('Sisesta martikli number või isikukood')
+    martikel = input('Sisesta martikli number või isikukood: ')
 
     ### salvestab andmed objekti ja siis faili
 
     andmed = {
-        'martikel': martikel,
+        'matrikel': martikel,
         'nimi': nimi
     }       
 
     with open('save.p', 'wb') as faili:
         pickle.dump(andmed, faili)
 
+def andmete_saatmine(andmed, seaded):
+    saatmiseks = {}
+    for key, value in seaded.items():
+        saatmiseks[value] = andmed[key]
+    return saatmiseks  
+
+
 
 ##################################################
 ####  PÕHIPROGRAMM  ##############################
 ##################################################
 
+print('\nTegemist on skriptiga, mis sisestab andmeid registreerimislehele')
+print('Kuupäeva ja kellaaja tuletab programm ajast, mil programm käivitati.\n')
 
-if os.path.exists('save.p'):    # kui kasutaja on varem nime ja koodi salvestanud, hakkab programm küsima ainult ruuminumbrit 
-    andmed_failist = {}
 
-    with open('save.p', 'rb') as failist:
-        andmed_failist = pickle.load(failist)
-    
-    ruum = input('Nimi ning martikli nr on olemas.\n Sisesta ruumi number: ')    
+if not (path.exists('save.p')):     # Kui käivitakse esimest korda, küsitakse nime ja martikli numbrit
+    esimene_käivitus()
 
-    kuupäev = kuupäev()
-    kellaaeg = kellaaeg()
+andmed_failist = {}
 
-    andmed_failist['päev'] = kuupäev[0]
-    andmed_failist['kuu'] = kuupäev[1]
-    andmed_failist['aasta'] = kuupäev[2]
+with open('save.p', 'rb') as failist:
+    andmed_failist = pickle.load(failist)
 
-    andmed_failist['kellaaeg'] = kellaaeg
+print(f'\nNimi: {andmed_failist["nimi"]}  Martikli nr/isikukood: {andmed_failist["matrikel"]}\n')
 
-    with open('save.p', 'wb') as faili:
-        pickle.dump(andmed_failist, faili)
-    
-else: 
-    andmete_salvestus()
+
+ruum = input('Sisesta ruumi number:  ')    
+
+kuupäev = kuupäev()
+kellaaeg = kellaaeg()
+
+andmed_failist['ruum']= ruum
+andmed_failist['aasta'] = kuupäev[2]
+andmed_failist['kuu'] = kuupäev[1]
+andmed_failist['päev'] = kuupäev[0]
+andmed_failist['kellaaeg'] = kellaaeg
+
+with open('save.p', 'wb') as faili:    #salvestan kogu info save.p faili
+    pickle.dump(andmed_failist, faili)
 
 #################################### PRINT TESTID
 
-
 andmed = pickle.load(open('save.p', 'rb'))
-print('@@', andmed)
 
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
+print('@@', andmete_saatmine(andmed, forms_seaded))
