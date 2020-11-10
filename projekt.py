@@ -74,7 +74,7 @@ andmed_failist['kuu'] = kuupäev[1]
 andmed_failist['aasta'] = kuupäev[2]
 andmed_failist['kellaaeg'] = kellaaeg
 
-with open('save.p', 'wb') as faili:             #salvestan kogu info .p faili
+with open('save.p', 'wb') as faili:    #salvestan kogu info save.p faili
     pickle.dump(andmed_failist, faili)
 
 
