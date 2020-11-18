@@ -122,6 +122,5 @@ while True:
         else:
             print("Andmete saatmisel tuli viga, proovige uuesti.")
     else:
-        print("Programm sulgub.")
         break
 
