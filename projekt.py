@@ -1,5 +1,4 @@
 import pickle
-import json
 import requests
 from os import path, environ
 from datetime import date, time, datetime 
@@ -22,7 +21,7 @@ def kuupäev():
 
 def kellaaeg():     # võtab praeguse kellaaja ja tagastab selle õiges vahemikus formi jaoks
     aeg = datetime.now().time()
-    
+
     if aeg < time(10,00):
         return kellaaeg_sõne(time(8,0), time(10,00))
     elif aeg < time(12,00):
@@ -32,14 +31,14 @@ def kellaaeg():     # võtab praeguse kellaaja ja tagastab selle õiges vahemiku
     elif aeg < time(18,00):
         return kellaaeg_sõne(time(16,00), time(18,00))
     elif aeg < time(23,59):
-        return kellaaeg_sõne(time(18,00),time(22,00))   
+        return kellaaeg_sõne(time(18,00),time(20,00))   
 
 def kellaaeg_sõne(aeg1, aeg2):
     aeg1 = aeg1.strftime('%H:%M')
     aeg2 = aeg2.strftime('%H:%M')
 
     return f'{aeg1}-{aeg2}'
-    
+
 def esimene_käivitus():       
     ### esmakordsel käivitamisel küsitakse nimi ja matrikli/number või isikukood
 
@@ -60,8 +59,7 @@ def andmete_saatmine(andmed, seaded):
     saatmiseks = {}
     for key, value in seaded.items():
         saatmiseks[value] = andmed[key]
-    return saatmiseks  
-
+    return saatmiseks
 
 
 ##################################################
@@ -69,7 +67,7 @@ def andmete_saatmine(andmed, seaded):
 ##################################################
 
 print('\nTegemist on skriptiga, mis sisestab andmeid registreerimislehele')
-print('Kuupäeva ja kellaaja tuletab programm ajast, mil programm käivitati.\n')
+print('Kuupäeva ja kellaaja tuletab programm ajast, mil programm käivitati.')
 
 
 if not (path.exists('save.p')):     # Kui käivitakse esimest korda, küsitakse nime ja matrikli numbrit
@@ -80,13 +78,13 @@ andmed_failist = {}
 with open('save.p', 'rb') as failist:
     andmed_failist = pickle.load(failist)
 #print(andmed_failist)
-print(f'\nNimi: {andmed_failist["nimi"]}  matrikli nr/isikukood: {andmed_failist["matrikel"]}\n')
-
-
-ruum = input('Sisesta ruumi number:  ')    
 
 kuupäev = kuupäev()
 kellaaeg = kellaaeg()
+
+print(f'\nNimi: {andmed_failist["nimi"]}  matrikli nr/isikukood: {andmed_failist["matrikel"]} kellaaeg: {kellaaeg}  kuupäev: {kuupäev[0]}-{kuupäev[1]}-{kuupäev[2]}\n')
+
+ruum = input('Sisesta ruumi number:  ')   
 
 andmed_failist['ruum']= ruum
 andmed_failist['aasta'] = kuupäev[2]
@@ -97,19 +95,33 @@ andmed_failist['kellaaeg'] = kellaaeg
 with open('save.p', 'wb') as faili:    #salvestan kogu info save.p faili
     pickle.dump(andmed_failist, faili)
 
-#################################### PRINT TESTID
 
 andmed = pickle.load(open('save.p', 'rb'))
-
-#print('@@', andmete_saatmine(andmed, forms_seaded))
-x = andmete_saatmine(andmed, forms_seaded)
-#print(x)
-y = json.dumps(x)
-print(y)
+vastus = andmete_saatmine(andmed, forms_seaded)
+r = requests.post(URL,data=vastus)
 
 
+if r.status_code == 200:
+     print("\nAndmed edukalt saadetud. ")
+else:
+    print("Andmete saatmisel tuli viga, proovige uuesti.")
+    
 
-
-r = requests.post(URL,data=x)
-print(r)
+while True:
+    userinp = input("Kui soovite, võite ka tänase päeva kõikide toimuvate tunnide eest juba ära täita, \nKirjutage 'JAH' või kui ei soovi, siis sulge terminal või sisestage tühik: ")
+    if userinp.upper() == "JAH":
+        kellinput = input("Sisestage kellaaeg oma soovitud tunniks kujul xx:xx-yy:yy ")
+        ruuminput = input("Sisestage ruum oma soovitud tunniks: ")
+        andmed["kellaaeg"] = kellinput
+        andmed["ruum"] = ruuminput
+        #print(andmed)
+        uusand = andmete_saatmine(andmed, forms_seaded)
+        uusreq = requests.post(URL,data=uusand)
+        if uusreq.status_code == 200:
+            print("\nAndmed edukalt saadetud. ")
+        else:
+            print("Andmete saatmisel tuli viga, proovige uuesti.")
+    else:
+        print("Programm sulgub.")
+        break
 
