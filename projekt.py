@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import pickle
-import json
 import requests
 from os import path, environ
 from datetime import date, time, datetime 
@@ -23,12 +22,12 @@ forms_seaded= {
 def päev():   
     aeg = datetime.now().date()
     return aeg.strftime('%d %m %Y').split()  
-# salvestan kuupäeva listi formaadis [päev, kuu, aasta]
+#           salvestan kuupäeva listi formaadis [päev, kuu, aasta]
 
 
 def aeg():     
 
-# võtab praeguse kellaaja ja tagastab selle õiges vahemikus formi jaoks
+#           võtab praeguse kellaaja ja tagastab selle õiges vahemikus formi jaoks
     aeg = datetime.now().time()
     
     if aeg < time(10,00):
@@ -50,15 +49,21 @@ def kellaaeg_sõne(aeg1, aeg2):
     
 def esimene_käivitus():       
 
-### esmakordsel käivitamisel küsitakse nimi ja matrikli/number või isikukood
+###         esmakordsel käivitamisel küsitakse nimi ja matrikli/number või isikukood
        
-    click.get_current_context()
+    print('''
+See Püütoni skript, aitab lihtsamini sisestada andmeid Delta registreerimislehele.\n
+Kuupäeva ja kellaaja tuletab programm ajast, mil programm käivitati.
+
+Skript salvestab nime ja matrikli koodi. Skripti käivitamisel on vaja lisada ainult ruuminumber.     
+    
+    ''')
 
     nimi = click.prompt('Sisesta ees-ja perekonnanimi', type=str)
     matrikel = click.prompt('Sisesta matrikli number või isikukood', type=str)
 
 
-    ### salvestab andmed objekti ja siis faili
+###         salvestab andmed objekti ja siis faili
 
     andmed = {
         'matrikel': matrikel,
@@ -71,81 +76,102 @@ def esimene_käivitus():
 def andmete_saatmine(andmed, seaded):
     saatmiseks = {}
     for key, value in seaded.items():
-        saatmiseks[value] = andmed[key]
-    print(saatmiseks)
-    saatmiseks_json = json.dumps(saatmiseks)
-    print(saatmiseks_json)
-    tulemus = requests.post(URL, data=saatmiseks_json)
-    
+        saatmiseks[value] = andmed[key]  
+        
+    tulemus = requests.post(URL, data=saatmiseks)    
 
     return tulemus  
 
+def kuva_andmed(andmed):
+        click.confirm(f'''
+
+Nimi: {andmed["nimi"]}
+matrikli nr/isikukood: {andmed["matrikel"]}
+kellaaeg: {andmed["kellaaeg"]}  
+kuupäev: {andmed['päev']}-{andmed['kuu']}-{andmed['aasta']}
+ruum: {andmed['ruum']}
+
+
+Kas saadan andmed ära?
+    ''', abort=True) 
+
+
+#           mooduli Click seadistus 
+
+@click.command()
+
+
+@click.argument('ruum', type=str, required=False)
+@click.option(
+    '-c', '--config', default=False, is_flag=True,
+    help='Kui soovid muuta nime ja koodi'
+    )
+@click.option('-m', '--mitu', default=False, is_flag=True,
+    help='Saab lisada kõiki tänase päeval toimunud tunde.\nProgramm küsib kellaaega ning ruuminumbrit.'
+)
 
 ##################################################
 ####  PÕHIPROGRAMM  ##############################
 ##################################################
 
-@click.command()
-@click.help_option()
-
-@click.argument('ruum', type=str, required=False)
-@click.option(
-    '-c', '--config', default=False, is_flag=True,
-    help='Kui soovid andmeid muuta, siis lisa see käsule juurde käivitamisel '
-    )
-
-def main(ruum, config):
+def main(ruum, config, mitu):    
     '''
     See Püütoni skript, aitab lihtsamini sisestada andmeid Delta registreerimislehele.\n
     Kuupäeva ja kellaaja tuletab programm ajast, mil programm käivitati.
 
     Skript salvestab nime ja matrikli koodi. Skripti käivitamisel on vaja lisada ainult ruuminumber. 
      
-    '''
-    print('\nTegemist on skriptiga, mis sisestab andmeid registreerimislehele')
-    print('Kuupäeva ja kellaaja tuletab programm ajast, mil programm käivitati.')
-    print(config)
-
+    ''' 
+    
     if not (path.exists('save.p')) or config:     
-
-# Kui käivitatakse skripti esimest korda või kasutaja seda soovib 
-        esimene_käivitus()
-     
+#       Kui käivitatakse skripti esimest korda või kasutaja seda soovib 
+        esimene_käivitus()     
 
     with open('save.p', 'rb') as failist:
         andmed_failist = pickle.load(failist)
 
-# Kellaaja ja kuupäeva genereerimine kui käivitatakse esimest korda
+#       Kellaaja ja kuupäeva genereerimine kui käivitatakse esimest korda
 
     kuupäev = päev()
     kellaaeg = aeg()
 
-    
-    if not ruum:
 
-# kui ruumi koos skripti käivitamisega, ei sisestaud, küsitakse uuesti
-        ruum = click.prompt('Sisesta ruumi number', type=str)
-
-    
-       
-    click.confirm(f'''
-
-Nimi: {andmed_failist["nimi"]}
-matrikli nr/isikukood: {andmed_failist["matrikel"]}
-kellaaeg: {kellaaeg}  
-kuupäev: {kuupäev[0]}-{kuupäev[1]}-{kuupäev[2]}
-ruum: {ruum}
-
-
-Kas saadan andmed ära?
-
-    ''', abort=True)
-
-    andmed_failist['ruum']= ruum
     andmed_failist['aasta'] = kuupäev[2]
     andmed_failist['kuu'] = kuupäev[1]
     andmed_failist['päev'] = kuupäev[0]
     andmed_failist['kellaaeg'] = kellaaeg
+
+#       Saabi lisada mitut tundi korraga
+
+    if mitu:
+        while True: 
+            userinp = click.confirm('Kui soovite, võite ka tänase päeva kõikide toimuvate tunnide eest juba ära täita, \nKirjutage \'y\' või kui ei soovi, siis kirjutage \'N\' või sisestage tühik: ', abort=True)
+            if userinp:
+                kellinput = click.prompt('Sisestage kellaaeg oma soovitud tunniks kujul xx:xx-yy:yy ')
+                ruuminput = click.prompt('Sisestage ruum oma soovitud tunniks: ')
+                andmed_failist["kellaaeg"] = kellinput
+                andmed_failist["ruum"] = ruuminput
+
+                kuva_andmed(andmed_failist)
+
+                vastus = andmete_saatmine(andmed_failist, forms_seaded)
+
+                if vastus.status_code == 200:
+                    print("\nAndmed edukalt saadetud.\n ")
+                else:
+                    print("Andmete saatmisel tuli viga, palunA proovige uuesti.")
+            else: 
+                break
+    
+    if not ruum or not mitu:
+#       Kui ruumi koos skripti käivitamisega, ei sisestaud, küsitakse uuesti
+        ruum = click.prompt('Sisesta ruumi number', type=str)
+   
+       
+    kuva_andmed(andmed_failist)
+
+    andmed_failist['ruum']= ruum
+
 
     with open('save.p', 'wb') as faili:    
 #salvestan kogu info save.p faili
