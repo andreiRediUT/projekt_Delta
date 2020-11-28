@@ -22,10 +22,13 @@ forms_seaded= {
 
 def päev():   
     aeg = datetime.now().date()
-    return aeg.strftime('%d %m %Y').split()  # salvestan kuupäeva listi formaadis [päev, kuu, aasta]
+    return aeg.strftime('%d %m %Y').split()  
+# salvestan kuupäeva listi formaadis [päev, kuu, aasta]
 
 
-def aeg():     # võtab praeguse kellaaja ja tagastab selle õiges vahemikus formi jaoks
+def aeg():     
+
+# võtab praeguse kellaaja ja tagastab selle õiges vahemikus formi jaoks
     aeg = datetime.now().time()
     
     if aeg < time(10,00):
@@ -46,8 +49,9 @@ def kellaaeg_sõne(aeg1, aeg2):
     return f'{aeg1}-{aeg2}'
     
 def esimene_käivitus():       
-    ### esmakordsel käivitamisel küsitakse nimi ja matrikli/number või isikukood
-    #    
+
+### esmakordsel käivitamisel küsitakse nimi ja matrikli/number või isikukood
+       
     click.get_current_context()
 
     nimi = click.prompt('Sisesta ees-ja perekonnanimi', type=str)
@@ -68,10 +72,11 @@ def andmete_saatmine(andmed, seaded):
     saatmiseks = {}
     for key, value in seaded.items():
         saatmiseks[value] = andmed[key]
-
+    print(saatmiseks)
     saatmiseks_json = json.dumps(saatmiseks)
-
+    print(saatmiseks_json)
     tulemus = requests.post(URL, data=saatmiseks_json)
+    
 
     return tulemus  
 
@@ -79,9 +84,9 @@ def andmete_saatmine(andmed, seaded):
 ##################################################
 ####  PÕHIPROGRAMM  ##############################
 ##################################################
-click.help_option()
-@click.command()
 
+@click.command()
+@click.help_option()
 
 @click.argument('ruum', type=str, required=False)
 @click.option(
@@ -101,20 +106,24 @@ def main(ruum, config):
     print('Kuupäeva ja kellaaja tuletab programm ajast, mil programm käivitati.')
     print(config)
 
-    if not (path.exists('save.p')) or config:     # Kui käivitakse esimest korda, küsitakse nime ja matrikli numbrit
+    if not (path.exists('save.p')) or config:     
+
+# Kui käivitatakse skripti esimest korda või kasutaja seda soovib 
         esimene_käivitus()
-    
+     
 
     with open('save.p', 'rb') as failist:
         andmed_failist = pickle.load(failist)
 
+# Kellaaja ja kuupäeva genereerimine kui käivitatakse esimest korda
 
     kuupäev = päev()
     kellaaeg = aeg()
 
     
-    # kui ruumi koos skripti käivitamisega, ei sisestaud, küsitakse uuesti
     if not ruum:
+
+# kui ruumi koos skripti käivitamisega, ei sisestaud, küsitakse uuesti
         ruum = click.prompt('Sisesta ruumi number', type=str)
 
     
@@ -138,20 +147,21 @@ Kas saadan andmed ära?
     andmed_failist['päev'] = kuupäev[0]
     andmed_failist['kellaaeg'] = kellaaeg
 
-    with open('save.p', 'wb') as faili:    #salvestan kogu info save.p faili
+    with open('save.p', 'wb') as faili:    
+#salvestan kogu info save.p faili
         pickle.dump(andmed_failist, faili)
 
 
     andmed = pickle.load(open('save.p', 'rb'))
 
 #print('@@', andmete_saatmine(andmed, forms_seaded))
-  
-    vastus = andmete_saatmine(andmed, forms_seaded)
+    
+    vastus = andmete_saatmine(andmed_failist, forms_seaded)
 
     if vastus.status_code == 200:
         print("\nAndmed edukalt saadetud. ")
     else:
-        print("Andmete saatmisel tuli viga, proovige uuesti.")
+        print("Andmete saatmisel tuli viga, palunA proovige uuesti.")
 
 
 if __name__ == "__main__":
