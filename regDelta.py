@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-
+#!python3
 import pickle
 import requests
 from os import path
@@ -60,8 +59,7 @@ See Püütoni skript, aitab lihtsamini sisestada andmeid Delta registreerimisleh
 Kuupäeva ja kellaaja tuletab programm ajast, mil programm käivitati.
 
 Skript salvestab nime ja matrikli koodi. Skripti käivitamisel on vaja lisada ainult ruuminumber.     
-    
-    ''')
+        ''')
 
     nimi = click.prompt('Sisesta ees-ja perekonnanimi', type=str)
     matrikel = click.prompt('Sisesta matrikli number või isikukood', type=str)
@@ -146,7 +144,6 @@ def main(ruum, config, mitu, logi):
     Kuupäeva ja kellaaja tuletab programm ajast, mil programm käivitati.
 
     Skript salvestab nime ja matrikli koodi. Skripti käivitamisel on vaja lisada ainult ruuminumber. 
-
     '''
 
     if logi:

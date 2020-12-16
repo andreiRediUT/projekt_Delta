@@ -1,2 +1,5 @@
 save.p
 logi.p
+/__pycache__
+/.vscode
+/regDelta.egg-info
