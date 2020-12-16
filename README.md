@@ -1,10 +1,20 @@
 # projekt_Delta
 
+### Antud CLI-d soovitatav kasutada ainult **Python 3**ga
+
 Installida CLI saab laadides alla ning kaustas */regdelta* käivitada käsk.
 
 ```
 pip3 install -e .
 ```
+
+või käivitada kui niisama skripti
+
+
+```
+python3 regDelta.py --help 
+```
+
 
 ```
 Usage: regDelta [OPTIONS] [RUUM]
